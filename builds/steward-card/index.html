@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Projects vs Hermes — Steward Card</title>
+<style>
+  :root{
+    --bg:#0e1116; --panel:#151a21; --line:#222b36;
+    --dim:#7c8a9a; --txt:#e6edf3;
+    --teal:#2dd4bf; --teal-glow:rgba(45,212,191,.35);
+    --amber:#f5b342; --grey:#566270;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--txt);
+    font-family:'Segoe UI',-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    display:flex; justify-content:center; padding:40px 20px;
+  }
+  .card{
+    width:1000px; background:var(--panel);
+    border:1px solid var(--line); border-radius:18px;
+    padding:34px 38px 30px; position:relative; overflow:hidden;
+  }
+  .card::before{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(700px 240px at 78% -10%, var(--teal-glow), transparent 60%);
+    pointer-events:none;
+  }
+  .tag{
+    font:600 11px/1 ui-monospace,Consolas,monospace;
+    letter-spacing:.18em; color:var(--teal);
+    text-transform:uppercase; margin-bottom:10px;
+  }
+  h1{
+    font-size:30px; font-weight:800; letter-spacing:-.02em;
+    margin-bottom:24px;
+  }
+  h1 .vs{color:var(--grey); font-weight:500; font-size:22px; padding:0 8px}
+  .cols{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+  .col{
+    background:var(--bg); border:1px solid var(--line);
+    border-radius:12px; padding:18px 20px;
+  }
+  .col h2{
+    font-size:14px; letter-spacing:.12em; text-transform:uppercase;
+    margin-bottom:14px; font-weight:700;
+  }
+  .col.left h2{color:var(--grey)}
+  .col.right h2{color:var(--teal); text-shadow:0 0 14px var(--teal-glow)}
+  ul{list-style:none}
+  li{
+    font-size:14.5px; line-height:1.5; padding:8px 0 8px 26px;
+    position:relative; border-top:1px solid #1b232d;
+  }
+  li:first-child{border-top:none}
+  .left li{color:var(--dim)}
+  .right li{color:var(--txt)}
+  li::before{
+    position:absolute; left:0; top:8px; font-weight:700;
+  }
+  .left li::before{content:"×"; color:#c0564f}
+  .right li::before{content:"✓"; color:var(--teal)}
+  .banner{
+    margin-top:22px; text-align:center;
+    border:1px solid var(--amber); border-radius:12px;
+    padding:14px; color:var(--amber); font-weight:700; font-size:16px;
+    background:rgba(245,179,66,.06);
+  }
+  .reply{
+    margin-top:20px; background:var(--bg); border:1px dashed var(--line);
+    border-radius:12px; padding:16px 18px;
+  }
+  .reply .lbl{
+    font:600 10px/1 ui-monospace,monospace; letter-spacing:.15em;
+    color:var(--dim); text-transform:uppercase; margin-bottom:8px;
+  }
+  .reply p{font-size:14px; color:var(--txt); line-height:1.5}
+  .reply .copy{
+    display:inline-block; margin-top:12px; font:600 12px/1 ui-monospace,monospace;
+    color:var(--teal); border:1px solid var(--teal); border-radius:8px;
+    padding:8px 12px; cursor:pointer; user-select:none;
+  }
+  .foot{
+    margin-top:18px; font:600 10px/1 ui-monospace,monospace;
+    letter-spacing:.14em; color:var(--grey); text-transform:uppercase;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="tag">Steward Protocol · Reality Anchor</div>
+    <h1>CLAUDE&nbsp;PROJECTS <span class="vs">vs</span> MY&nbsp;HERMES&nbsp;STACK</h1>
+
+    <div class="cols">
+      <div class="col left">
+        <h2>Claude Projects</h2>
+        <ul>
+          <li>Persistent context — but trapped inside ONE vendor</li>
+          <li>Needs a paid Anthropic account to exist</li>
+          <li>No scheduling — you must open it every time</li>
+          <li>Leave? Export JSON, rebuild from scratch</li>
+          <li>The "full course" = a workaround for lock-in</li>
+        </ul>
+      </div>
+      <div class="col right">
+        <h2>My Hermes Stack</h2>
+        <ul>
+          <li>Memory injected EVERY turn, across all chats</li>
+          <li>150+ self-updating skills, versioned & patchable</li>
+          <li>Local-first — no vendor account required</li>
+          <li>cron + autonomous agents run while you sleep</li>
+          <li>Steward-constitution governed, not just prompted</li>
+          <li>Zero lock-in by design — model/OS agnostic</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="banner">Persistent context that LEAVES whenever you want.</div>
+
+    <div class="reply">
+      <div class="lbl">Reply-ready · one click to copy</div>
+      <p>"Claude Projects = persistent context inside one vendor. My Hermes stack = persistent context that's local-first, skill-driven, autonomously scheduled, and leaves whenever I want. The 'course' is a workaround for lock-in."</p>
+      <span class="copy" onclick="navigator.clipboard.writeText(this.previousElementSibling.textContent.trim());this.textContent='copied ✓'">copy reply</span>
+    </div>
+
+    <div class="foot">north star: steward-protocol · adoption must not require aethertwin</div>
+  </div>
+</body>
+</html>
