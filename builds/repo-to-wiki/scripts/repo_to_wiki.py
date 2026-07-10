@@ -21,11 +21,6 @@ IMPORT_RE = re.compile(
     r'^\s*(?:import|from)\s+([a-zA-Z0-9_\.]+)', re.M)
 REQUIRE_RE = re.compile(
     r'(?:require|import)\s*\(\s*[\'"]([a-zA-Z0-9_\-\.]+)[\'"]\s*\)')
-STEWARD_PRINCIPLES = [
-    "local-first", "consent", "no hidden network", "autonomy",
-    "transparency", "stewardship", "model-agnostic", "no lock-in",
-    "privacy", "accountability",
-]
 LOCKIN_SIGNALS = [
     "anthropic.com", "openai.com", "googleapis.com", "gemini",
     "claude", "gpt-", "azure", "aws.amazon.com", "vercel",
@@ -122,30 +117,73 @@ def read_doc(repo, name):
     return ""
 
 
+def extract_principles(repo):
+    """Derive the principle vocabulary from the repo's OWN constitution docs.
+
+    Returns (principles, source) where principles is a list of lowercase
+    keyword fragments to look for. Falls back to a generic Steward vocabulary
+    only when no constitution doc exists (so non-Steward repos still get a
+    generic check instead of a false DRIFT).
+    """
+    const_docs = ["CONSTITUTION.md", "PRINCIPLES.md", "CONSTITUTIONAL_REVIEW.md"]
+    const_blob = "".join(read_doc(repo, d) for d in const_docs)
+    if not const_blob.strip():
+        # no constitution present — use generic fallback vocabulary
+        return (
+            ["local-first", "consent", "no hidden network", "transparency",
+             "no lock-in", "privacy", "accountability", "autonomy",
+             "stewardship", "model-agnostic"],
+            "fallback-generic",
+        )
+    # Extract principle names from numbered/bulleted lines like:
+    #   "1. **Agency** — ..."  or  "### 1. Agency" or "- **Transparency**"
+    found = []
+    for line in const_blob.splitlines():
+        m = re.search(r'(?:^|\s)(?:#{2,4}\s*)?(?:\d+\.\s*)?[\*\-]?\s*\*\*([A-Z][A-Za-z][\w\- ]{1,30}?)\*\*', line)
+        if m:
+            name = m.group(1).strip().lower()
+            # keep meaningful single words / short phrases
+            if 3 <= len(name) <= 24:
+                found.append(name)
+    # de-dup, keep order
+    seen, principles = set(), []
+    for f in found:
+        if f not in seen:
+            seen.add(f)
+            principles.append(f)
+    return (principles or ["transparency", "consent", "local-first"],
+            "repository-constitution")
+
+
 def constitution_pass(repo):
     verdict = "N/A"
     notes = []
-    agents = read_doc(repo, "AGENTS.md")
-    const = read_doc(repo, "CONSTITUTIONAL_REVIEW.md")
-    has_steward = bool(agents) or bool(const) or \
+    # Honour the repo's own governance docs, not a hardcoded vocabulary.
+    src_docs = ["AGENTS.md", "CONSTITUTION.md", "PRINCIPLES.md",
+                "CONSTITUTIONAL_REVIEW.md", "README.md"]
+    docs_present = [d for d in src_docs
+                    if os.path.isfile(os.path.join(repo, d))]
+    has_steward = bool(docs_present) or \
         os.path.isfile(os.path.join(repo, "examples", "research-lab",
                                     "reflection_loop.py"))
     if not has_steward:
-        return ("N/A", ["No AGENTS.md / CONSTITUTIONAL_REVIEW.md detected — "
+        return ("N/A", ["No AGENTS.md / CONSTITUTION.md detected — "
                          "not a Steward-governed repo; skipping principle pass."])
-    hits = {p: 0 for p in STEWARD_PRINCIPLES}
-    blob = (agents + const).lower()
-    for p in STEWARD_PRINCIPLES:
-        hits[p] = blob.count(p)
+    principles, psrc = extract_principles(repo)
+    blob = "".join(read_doc(repo, d) for d in docs_present).lower()
+    hits = {p: blob.count(p) for p in principles}
     markers = [p for p, c in hits.items() if c]
     drift = [p for p, c in hits.items() if c == 0]
     lockin = []
     for sig in LOCKIN_SIGNALS:
         if sig in blob:
             lockin.append(sig)
+    notes.append(f"Principle vocabulary source: {psrc} "
+                 f"({len(principles)} principles)")
     notes.append("Steward markers found: " + (", ".join(markers) or "none"))
     if drift:
-        notes.append("Principles not explicitly referenced: " + ", ".join(drift))
+        notes.append("Principles not explicitly referenced: "
+                     + ", ".join(drift))
     if lockin:
         notes.append("⚠ Lock-in signals in docs: " + ", ".join(lockin))
         verdict = "DRIFT" if drift else "PASS*"
