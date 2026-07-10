@@ -59,14 +59,28 @@ python3 scripts/repo_to_wiki.py --repo /path/to/repo [--out WIKI.md] [--no-const
 4. **Dependency map** — import/require scan across the repo (heuristic), grouped
    by internal module vs external package.
 5. **Recent activity** — last 5 commits (who, what, when) from `git log`.
-6. **Steward review pass** — scans for AGENTS.md / CONSTITUTIONAL_REVIEW.md;
-   if the repo is a Steward repo, prints the 10 Principles checklist and flags
-   any drift between documented intent and observed code (heuristic: counts of
-   principle keywords, presence of lock-in signals like hard-coded vendor URLs).
+6. **Steward review pass** — detects the repo's OWN governance docs
+   (AGENTS.md, CONSTITUTION.md, PRINCIPLES.md, CONSTITUTIONAL_REVIEW.md, README.md).
+   If the repo is a Steward repo, it **derives the principle vocabulary from the
+   repo's own constitution** — `extract_principles()` reads CONSTITUTION.md /
+   PRINCIPLES.md and extracts the `**Bold**` numbered principle names — then scores
+   coverage of THOSE principles. It does NOT impose an external vocabulary. It only
+   falls back to a generic Steward vocabulary (local-first/consent/transparency/
+   no lock-in/...) when the repo has NO constitution doc at all. Flags lock-in
+   signals (hard-coded vendor URLs: anthropic.com, openai.com, googleapis.com,
+   gemini, claude, gpt-, azure, aws.amazon.com, vercel).
 
 ## Verification (always do this)
 - Open the generated WIKI.md; confirm LOC table rendered, no empty sections.
 - Re-run on a second repo to prove it's general, not hard-coded to one path.
+- **Run on repos with DIFFERENT constitution vocabularies** to prove the detector
+  ADAPTS. e.g. `steward-protocol` (real constitution: Agency, Transparency, Honesty,
+  Consent, No extraction, Local-first, Reflection, Teaching, Compassion, Long-term
+  thinking) must return **PASS**; a non-Steward repo (no constitution doc) must return
+  **N/A**; a repo whose AGENTS.md never references its own principles returns **DRIFT**.
+  A constitutionally-aligned Steward repo returning false DRIFT means the detector
+  reverted to a hardcoded vocabulary — re-check `extract_principles()`. Regression
+  recipe: `references/constitution-detector.md`.
 - If the repo has no README/AGENTS.md, architecture notes say "no docs found"
   rather than inventing structure (never fabricate file contents).
 
@@ -79,6 +93,25 @@ python3 scripts/repo_to_wiki.py --repo /path/to/repo [--out WIKI.md] [--no-const
 - CodeWiki (Google) is real and Gemini-powered; this skill is the *local,
   constitution-governed* counterpart — position it as a complement/alternative,
   not a clone claim.
+- **FALSE-DRIFT BUG (found + fixed 2026-07-10, regression risk):** the original
+  `constitution_pass` hard-coded a `STEWARD_PRINCIPLES` list
+  (local-first/consent/no-hidden-network/autonomy/transparency/stewardship/
+  model-agnostic/no lock-in/privacy/accountability) and scanned only
+  AGENTS.md + CONSTITUTIONAL_REVIEW.md. This **falsely flagged the Steward
+  protocol's OWN repo as DRIFT** — its constitution uses *different* names
+  (Agency, Honesty, No extraction, ...) absent from the hardcoded list.
+  Fix: `extract_principles(repo)` derives the vocabulary from the repo's own
+  CONSTITUTION.md/PRINCIPLES.md; `constitution_pass` scans all five governance
+  docs. The generic fallback list is used ONLY when no constitution doc exists.
+  **Regression guard:** do NOT "simplify" the detector back to a fixed list —
+  that re-introduces this bug. Keep `extract_principles()` in the script.
+  Detail + regression recipe: `references/constitution-detector.md`.
+
+## Support files
+- `references/constitution-detector.md` — how the principle detector works, the
+  2026-07-10 false-DRIFT bug, and a 4-step regression recipe (steward-protocol →
+  PASS, no-constitution repo → N/A, AetherTwin-Helm → true DRIFT).
+- `references/codewiki-grounding.md` — CodeWiki positioning / local-first rationale.
 
 ## Output shape
 - One self-contained `WIKI.md` written next to (or into) the repo.
