@@ -11,5 +11,11 @@ at home. Each entry points to a live skill under the agent's skill space
 | `mothership-deploy` | Dock an artifact on a mothership (used to dock this home's builds) |
 | `social/thread-reply-card` | (alias) reply-to-thread card builder |
 
+## Docked builds (under `builds/`)
+| Build | What it is |
+|---|---|
+| `steward-card/` | Claude Projects vs My Hermes Stack — one-glance local-first case |
+| `repo-to-wiki/` | Offline, constitution-governed code-docs generator (local CodeWiki) |
+
 New skills are added here when a procedure proves reusable. Each links to its
 source so the home stays transparent.
